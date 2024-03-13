@@ -108,6 +108,8 @@ app.post('/withdraw', (req, res) => {
 app.get('/balance', (req, res) => {
   res.status(200).json({ balance });
 });
+
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server is listening at http://localhost:${port}`);
