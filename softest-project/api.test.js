@@ -117,7 +117,7 @@ test('HTTP status codes', async () => {
 });
 
 
-
+/////////////////////////////////  Idempotent  //////////////////////////////////////////////////////////
 test('Idempotent property', async () => {
   // Mocking a request that returns the same data on multiple calls
   mock.onGet(`${BASE_URL}/idempotent`).reply(200, { id: 'data1' });
@@ -129,7 +129,7 @@ test('Idempotent property', async () => {
   // Expecting the same data
   expect(response1.data).toEqual(response2.data);
 });
-
+/////////////////////////////   safe  //////////////////////////////////////////////////////////////////////
 test('Safe property', async () => {
   // Mocking a safe request that does not change server state
   mock.onGet(`${BASE_URL}/safe`).reply(200, { message: 'This is a safe request' });
@@ -141,7 +141,7 @@ test('Safe property', async () => {
   expect(response.status).toBe(200);
   expect(response.data.message).toBe('This is a safe request');
 });
-
+//////////////////////////////////////////Functional///////////////////////////////////////////////////////
 test('Functional testing', async () => {
   // Mocking a translation API that translates Thai to English
   mock.onPost(`${BASE_URL}/translate`).reply(200, { translated_text: 'Hello' });
@@ -152,6 +152,54 @@ test('Functional testing', async () => {
   // Expecting the translated text in English
   expect(response.status).toBe(200);
   expect(response.data.translated_text).toBe('Hello');
+});
+
+test('Withdraw: Valid amount', async () => {
+  // Mocking a withdrawal response
+  mock.onPost(`${BASE_URL}/withdraw`).reply(200, { balance: 100 });
+
+  // Sending a withdrawal request
+  const response = await axios.post(`${BASE_URL}/withdraw`, { amount: 50 });
+
+  // Expecting a successful response with updated balance
+  expect(response.status).toBe(200);
+  expect(response.data.balance).toBe(100); // Assuming original balance was 150
+});
+
+test('Deposit: Valid amount', async () => {
+  // Mocking a deposit response
+  mock.onPost(`${BASE_URL}/deposit`).reply(200, { balance: 200 });
+
+  // Sending a deposit request
+  const response = await axios.post(`${BASE_URL}/deposit`, { amount: 100 });
+
+  // Expecting a successful response with updated balance
+  expect(response.status).toBe(200);
+  expect(response.data.balance).toBe(200); // Assuming original balance was 100
+});
+
+
+
+test('Withdraw: Invalid amount (negative)', async () => {
+  // Sending a withdrawal request with negative amount
+  try {
+    await axios.post(`${BASE_URL}/withdraw`, { amount: -50 });
+  } catch (error) {
+    // Expecting a 400 Bad Request response
+    expect(error.response.status).toBe(400);
+    expect(error.response.data.message).toBe('Invalid withdrawal amount');
+  }
+});
+
+test('Deposit: Invalid amount (zero)', async () => {
+  // Sending a deposit request with zero amount
+  try {
+    await axios.post(`${BASE_URL}/deposit`, { amount: 0 });
+  } catch (error) {
+    // Expecting a 400 Bad Request response
+    expect(error.response.status).toBe(400);
+    expect(error.response.data.message).toBe('Invalid deposit amount');
+  }
 });
 
 afterAll(() => {
